@@ -1,0 +1,3 @@
+[submodule "extlib/gpmf-parser"]
+	path = extlib/gpmf-parser
+	url = https://github.com/gopro/gpmf-parser.git
