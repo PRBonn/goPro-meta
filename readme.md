@@ -90,3 +90,13 @@ with open("metadata.yaml", 'r') as stream:
 data['000001.jpg']['gps']['lat'] #latitude gps of image 000001.jpg
 data['000034.jpg']['ts'] #timestamp for image 000034.jpg
 ```
+# Comments and credits
+
+- Only gps extraction is implemented so far. More metadata extraction 
+will be added.
+
+- Libraries used:
+  - [Boost](https://github.com/boostorg/boost) ([@boostorg](https://github.com/boostorg))
+  - [GoPro GPMF Parser](https://github.com/gopro/gpmf-parser) ([@gopro](https://github.com/gopro))
+  - [OpenCV](https://github.com/opencv/opencv) ([@opencv](https://github.com/opencv))
+  - [libyaml-cpp](https://github.com/jbeder/yaml-cpp) ([@jbeder](https://github.com/jbeder))
