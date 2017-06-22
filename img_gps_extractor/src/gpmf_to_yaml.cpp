@@ -337,16 +337,24 @@ namespace gpmf_to_yaml
     sensorframe_t sf; // sensor frame for each image
 
     uint32_t idx = 0;
-    while(ret == CONV_OK)
+    uint32_t skipped = 0;
+    while(true)
     {
       float timestep = ts+idx*step;
       ret = _extractor.get_frame(timestep,real_ts,idx,name);
       if(ret == img_extr::EXTR_CANT_FRAME_OUT_OF_BOUNDS)
       {
         DEBUG("Done populating, we are off bounds.\n");
-        _n_images = idx;
+        _n_images = idx - skipped;
         DEBUG("Number of images extracted for database is %u.\n",_n_images);
         return CONV_OK;
+      }
+      else if(ret == img_extr::EXTR_SKIPPING_FRAME)
+      {
+        DEBUG("Skipping frame. Don't save to list\n");
+        idx++;
+        skipped++;
+        continue;
       }
       else if(ret)
       {

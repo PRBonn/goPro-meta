@@ -25,6 +25,7 @@ namespace mp4_img_extractor
   typedef enum
   {
     EXTR_OK=0,
+    EXTR_SKIPPING_FRAME,
     EXTR_ERROR,
     EXTR_CANT_LOAD_VIDEO,
     EXTR_CANT_FRAME_OUT_OF_BOUNDS,

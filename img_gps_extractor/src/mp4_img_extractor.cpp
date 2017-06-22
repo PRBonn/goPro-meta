@@ -104,8 +104,8 @@ namespace mp4_img_extractor
     // report back to user.
     if(_frame.empty())
     {
-      std::cerr << "SOMETHING HORRIBLY WRONG WITH FRAME SKIPPING. Exiting" <<std::endl;
-      assert(0);
+      std::cerr << "Skipping frame at " << real_ts << "ms. Exiting" <<std::endl;
+      return EXTR_SKIPPING_FRAME;
     }
 
     DEBUG("Time cv cap>>frame: %f\n",float(clock()-begin_time)/CLOCKS_PER_SEC);
