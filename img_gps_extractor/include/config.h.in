@@ -1,0 +1,6 @@
+// the configured options and settings for Tutorial
+#define BUILD_VERSION_MAJOR @VERSION_MAJOR@
+#define BUILD_VERSION_MINOR @VERSION_MINOR@
+#define BUILD_GIT_HASH "@GIT_HASH@"
+#define BUILD_DATE "@DATE@"
+#define BUILD_DEV "@GIT_USER@"

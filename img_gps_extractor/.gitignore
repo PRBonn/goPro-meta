@@ -1,0 +1,4 @@
+# build stuff
+*.o 
+build/
+.d
