@@ -8,25 +8,31 @@ accelerometer, gyro, and any other desired metadata.
 
 ## Dependencies
 
-- We use boost for some filesystem stuff, so you need to install it:
+- Boost (for filesystem stuff):
 
 ```sh
   $ sudo apt install libboost-all-dev
 ```
-- Opencv2.4 needs to be installed in the system: [Link](http://docs.opencv.org/2.4/doc/tutorials/introduction/linux_install/linux_install.html)
+- Opencv3: [Link](http://docs.opencv.org/3.0-beta/doc/tutorials/introduction/linux_install/linux_install.html)
 
-- We use libyaml-cpp for yaml file creation and parsing, so it needs to be installed. [Link](https://github.com/jbeder/yaml-cpp). Standard cmake pipeline for install:
+- libyaml-cpp for yaml file creation and parsing: [Link](https://github.com/jbeder/yaml-cpp):
 
-```sh
-  $ git clone https://github.com/jbeder/yaml-cpp.git
-  $ cd yaml-cpp/
-  $ mkdir build
-  $ cd build/
-  $ cmake ..
-  $ make -j 
-  $ sudo make install
-```
+  - Ubuntu 16.04 (apt-get installs v0.5.2):
 
+    ```sh
+      $ sudo apt-get install libyaml-cpp-dev
+    ```
+  - Ubuntu 14.04 (apt-get installs v0.5.1 which does not contain yaml-cpp-config.cmake):
+
+    ```sh
+      $ git clone https://github.com/jbeder/yaml-cpp.git
+      $ cd yaml-cpp/
+      $ mkdir build
+      $ cd build/
+      $ cmake ..
+      $ make -j 
+      $ sudo make install
+    ```
 ## Usage
 
 This code uses the gpmf-parser so that submodule has to be cloned into its
