@@ -34,6 +34,7 @@ namespace mp4_img_extractor
   class img_extractor
   {
     public:
+      img_extractor(bool verbose=false);
       img_extractor(const std::string& in, const std::string& out_dir,bool verbose);
       ~img_extractor();
       int32_t init();

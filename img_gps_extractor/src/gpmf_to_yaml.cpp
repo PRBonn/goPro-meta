@@ -20,11 +20,16 @@
 #include <string> 
 #include <fstream>
 
-// libyaml stuff
-#include "yaml-cpp/yaml.h"
-
 namespace gpmf_to_yaml
 {
+
+  converter::converter(bool verbose):_extractor()
+  {
+    // init some members
+    _ms = &_metadata_stream;
+    _payload = NULL;
+    _verbose = verbose; //verbose is false by default
+  }
 
   converter::converter(const std::string& in,
                        const std::string& out_dir, 
@@ -74,13 +79,15 @@ namespace gpmf_to_yaml
 
   int32_t converter::init(const std::string& in,
                           const std::string& out_dir, 
-                          const float fr)
+                          const float fr,
+                          const uint32_t idx_offset)
   {
     // reload args into members
     _input = in;
     _output_dir = out_dir;
     _fr = fr;
     _extractor.init(_input,_output_dir);
+    _idx_offset = idx_offset;
     
     // init
     int ret = init();
@@ -88,7 +95,7 @@ namespace gpmf_to_yaml
     return ret;
   }
 
-  int32_t converter::run()
+  int32_t converter::run(YAML::Emitter & out)
   {
     int32_t ret = CONV_OK;
     
@@ -145,20 +152,25 @@ namespace gpmf_to_yaml
     }
     
     // create yaml database in the output folder with the metadata for each img
-    std::cout << "Creating metadata.yaml in output dir..." << std::endl;
-    ret = sensorframes_to_yaml();
+    std::cout << "Creating metadata yaml dict..." << std::endl;
+    ret = sensorframes_to_yaml(out);
     if(ret)
     {
-      std::cout << "Error creating metadata.yaml. Exiting..." << std::endl;
+      std::cout << "Error creating metadata yaml dict. Exiting..." << std::endl;
       return ret;
     }
     else
     {
-      std::cout << "Done creating and populating metadata.yaml." << std::endl << std::endl;
+      std::cout << "Done creating metadata yaml dict." << std::endl << std::endl;
     }
 
 
     return ret;
+  }
+
+  int32_t converter::get_offset()
+  {
+    return _idx_offset;
   }
 
   int32_t converter::cleanup()
@@ -167,7 +179,9 @@ namespace gpmf_to_yaml
     _payload = NULL;
     CloseGPMFSource();
 
-    // close yaml file
+    // empty the maps
+    _gps.clear();
+    _sensor_frames.clear();
 
     return CONV_OK;
   }
@@ -341,12 +355,14 @@ namespace gpmf_to_yaml
     while(true)
     {
       float timestep = ts+idx*step;
-      ret = _extractor.get_frame(timestep,real_ts,idx,name);
+      ret = _extractor.get_frame(timestep,real_ts,_idx_offset+idx,name);
       if(ret == img_extr::EXTR_CANT_FRAME_OUT_OF_BOUNDS)
       {
         DEBUG("Done populating, we are off bounds.\n");
         _n_images = idx - skipped;
         DEBUG("Number of images extracted for database is %u.\n",_n_images);
+        //final offset for next batch of files
+        _idx_offset+=idx;
         return CONV_OK;
       }
       else if(ret == img_extr::EXTR_SKIPPING_FRAME)
@@ -356,6 +372,7 @@ namespace gpmf_to_yaml
         skipped++;
         continue;
       }
+
       else if(ret)
       {
         DEBUG("ERROR GETTING FRAME\n");
@@ -363,12 +380,13 @@ namespace gpmf_to_yaml
       }
       // populate a sensor frame for each image and put only timestamp for now
       // (interpolated gps, and other sensors will be populated later)
-      sf.ts = real_ts;
+      sf.ts = real_ts+_idx_offset*step;
       _sensor_frames[name] = sf;
-      DEBUG("ts: %.5f, real ts: %.5f, name: %s\n\n",timestep,_sensor_frames[name].ts,name.c_str());
+      DEBUG("ts: %.5f, real ts: %.5f, name: %s\n\n",timestep+_idx_offset*step,_sensor_frames[name].ts,name.c_str());
       idx++;
     }
-
+    //final offset for next batch of files
+    _idx_offset+=idx;
     return ret;
   }
   
@@ -394,7 +412,7 @@ namespace gpmf_to_yaml
         same for gopro sensor data. Also the astronomical chance that a sensor
         ts coincides with sample time of image.
       */
-      float prev_ts=0, next_ts=_gps.rbegin()->first, delta_ts;
+      float prev_ts=_gps.begin()->first, next_ts=_gps.rbegin()->first, delta_ts;
       float interp_gps[5];
       
       // this covers the general case (middle of file) and the coincidence
@@ -447,30 +465,26 @@ namespace gpmf_to_yaml
     return ret;
   }
   
-  int32_t converter::sensorframes_to_yaml()
+  int32_t converter::sensorframes_to_yaml(YAML::Emitter & out)
   {
 
     int32_t ret = CONV_OK;
 
-    //create the yaml file emitter, and the file
-    YAML::Emitter out;
-    assert(out.good());
-
-    // create yaml file
-    std::fstream fs;
-    std::string filename=_output_dir+"/metadata.yaml";
-    fs.open(filename, std::fstream::out);
-    
     //comments with some info about the program run
     //put every sensor frame in yaml file
-    out << YAML::Comment("Original File: "+_input+"\n"+
-                         "Frame rate: "+std::to_string(_fr));
-    out << YAML::BeginMap;
+    bool first = true;
     for (auto& sf:_sensor_frames)
     {
       // create entry for the file name
       out << YAML::Key << sf.first;
       out << YAML::Value;
+
+      // if it is the first video of this file, comment where it was taken
+      if(first)
+      {
+        out << YAML::Comment("Original File: "+_input+", Frame rate: "+std::to_string(_fr));
+        first=false;
+      }
 
       // create timestamp
       out << YAML::BeginMap;
@@ -491,7 +505,6 @@ namespace gpmf_to_yaml
       
       out << YAML::EndMap;
     }
-    out << YAML::EndMap; //filename map
 
     // debug() impl makes no sense here because there is already a << 
     // impl for the whole file
@@ -499,13 +512,6 @@ namespace gpmf_to_yaml
     {
       std::cout << out.c_str() << std::endl << std::endl;
     }
-
-    // output yaml to file
-    fs << out.c_str();
-    
-
-    // close the file
-    fs.close();
 
     return ret;
 

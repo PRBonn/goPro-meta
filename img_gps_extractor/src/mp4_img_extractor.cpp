@@ -13,6 +13,10 @@
 
 namespace mp4_img_extractor
 {
+  img_extractor::img_extractor(bool verbose):_verbose(verbose)
+  {
+  }
+
   img_extractor::img_extractor(const std::string& in,
                                const std::string& out_dir,
                                bool verbose):
@@ -53,6 +57,7 @@ namespace mp4_img_extractor
   {
     _input = in;
     _output_dir = out_dir;
+    _cap.release();
     _cap = cv::VideoCapture(_input);
 
     // init

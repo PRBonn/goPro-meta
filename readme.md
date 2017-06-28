@@ -33,6 +33,7 @@ accelerometer, gyro, and any other desired metadata.
       $ make -j 
       $ sudo make install
     ```
+
 ## Usage
 
 This code uses the gpmf-parser so that submodule has to be cloned into its
@@ -55,6 +56,33 @@ video.mp4 at a frame rate of 3fps, and it saves images and yaml file to folder
   $ ./img_gps_extractor -i video.mp4 -f 3 -o /tmp/output
 ```
 
+As a design choice, the GoPro never saves videos bigger than 4Gb (not even when 
+SD is extFat). If a video is bigger than this, it splits it into sub videos, 
+with a sort of complicated way to handle the metadata. If this is the case, 
+use the -d option, instead of the -i option. 
+
+The following example gets all the videos that correspond to one
+video in the folder /tmp/input and it deals with everything so that you don't have
+to merge them externally (not even ffmpeg is currently able to merge gopro videos
+keeping the metadata):
+
+```sh
+  $ ./img_gps_extractor -d /tmp/input -f 3 -o /tmp/output
+```
+
+The directory should look something like this:
+
+```sh
+  $ tree /tmp/input
+  /tmp/input
+  ├── GOPRXXXX.MP4
+  ├── GP01XXXX.MP4
+  └── GP02XXXX.MP4
+```
+
+The only check that we do is for the .MP4 extension and then we order in alphabetical 
+order to recover the order structure, so don't rename the files please :)
+
 
 ## Format of the output .yaml file:
 
@@ -69,22 +97,30 @@ This is temporary, but it gives an idea of how the final one will look like:
   - 3D speed magnitude (m/s)
 
 ```yaml
-000000.jpg:
+000000.jpg:  # Original File: /tmp/input/GOPRXXXX.MP4, Frame rate: 0.020000
   ts: 0
   gps:
-    lat: 33.1265
-    long: -117.3274
-    alt: -20.184
-    2dv: 0.167
-    3dv: 0.19
+    lat: 50.72745
+    long: 7.087335
+    alt: 121.54
+    2dv: 0.061
+    3dv: 0.11
 000001.jpg:
-  ts: 1.001
+  ts: 50.00829
   gps:
-    lat: 33.1265
-    long: -117.3274
-    alt: -20.05719
-    2dv: 0.730125
-    3dv: 0.689375
+    lat: 50.72681
+    long: 7.088741
+    alt: 117.3692
+    2dv: 7.321869
+    3dv: 7.33
+000002.jpg:  # Original File: /tmp/input/GP01XXXX.MP4, Frame rate: 0.020000 (-< when the video it was taken from changes, we comment!)
+  ts: 99.99573
+  gps:
+    lat: 50.7245
+    long: 7.09001
+    alt: 91.91341
+    2dv: 7.956978
+    3dv: 7.976304
 ```
 
 To parse the yaml file from python:
