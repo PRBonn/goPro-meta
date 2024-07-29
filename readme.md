@@ -1,4 +1,11 @@
-# App to extract images asociated with GPS
+> [!IMPORTANT]
+> **Repository Archived**  
+> This repository has been archived and is no longer actively maintained. You are welcome to explore the code, but please note that no further updates, issues, or pull requests will be accepted.
+>
+> Thank you for your interest and contributions.</p>
+
+
+# App to extract images associated with GPS
 
 ## Purpose:
   
